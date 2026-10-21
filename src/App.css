@@ -879,3 +879,31 @@ a:focus-visible {
     padding: 18px;
   }
 }
+
+.cart-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.purchase-button {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 24px;
+  background: #b64d84;
+  color: white;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.purchase-button:hover:not(:disabled) {
+  background: #963765;
+}
+
+.purchase-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+

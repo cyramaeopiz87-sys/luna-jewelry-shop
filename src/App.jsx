@@ -133,7 +133,41 @@ function App() {
     )
   }
 
+  function purchaseItems() {
+    if (cart.length === 0) return
+
+    const confirmed = window.confirm(
+      `Confirm your purchase of ${cartCount} item(s) for ₱${grandTotal.toFixed(2)}?`,
+    )
+
+    if (!confirmed) return
+
+    setProducts((current) =>
+      current.map((product) => {
+        const purchasedItem = cart.find(
+          (item) => item.id === product.id,
+        )
+
+        return purchasedItem
+          ? {
+              ...product,
+              quantity: product.quantity - purchasedItem.quantity,
+            }
+          : product
+      }),
+    )
+
+    alert(
+      `Purchase successful! Your total is ₱${grandTotal.toFixed(2)}. Thank you for shopping with Luna Jewelry!`,
+    )
+
+    setCart([])
+    setCartOpen(false)
+  }
+
   return (
+
+
     <div className="shop">
       <header className="navbar">
         <a className="logo" href="#home" aria-label="Luna Jewelry home">
@@ -392,11 +426,24 @@ function App() {
                   ))}
                 </div>
 
-                <div className="cart-total">
-                  <span>Grand Total</span>
-                  <strong>₱{grandTotal.toFixed(2)}</strong>
-                </div>
-                <p className="cart-note">Your jewelry, beautifully chosen. ♡</p>
+                
+<div className="cart-total">
+  <span>Grand Total</span>
+  <strong>₱{grandTotal.toFixed(2)}</strong>
+</div>
+
+<div className="cart-actions">
+  <button
+    className="purchase-button"
+    onClick={purchaseItems}
+    disabled={cart.length === 0}
+  >
+    Purchase →
+  </button>
+</div>
+
+<p className="cart-note">Your jewelry, beautifully chosen. ♡</p>
+
               </>
             )}
           </aside>
