@@ -344,7 +344,7 @@ const initialProducts = [
     price: 850,
     quantity: 6,
     rating: 4.8,
-    description: 'A romantic rose gold-tone set ready for a thoughtful gift.',
+    description: 'A romantic rose gold-tone set ready for a thoughtful gift.',  
     specification: 'Matching necklace and earrings, rose gold-tone finish',
     image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR6NU4atKlb5SolFJvsY9FzVIJGMpsZnZJdTF7M52b8FA&s=10',
   },
@@ -365,6 +365,8 @@ const categories = [
 function App() {
   const [products, setProducts] = useState(initialProducts)
   const [selectedCategory, setSelectedCategory] = useState('All Jewelry')
+  const [activeView, setActiveView] = useState('shop')
+  const [adminSection, setAdminSection] = useState('dashboard')
   const [favorites, setFavorites] = useState([])
   const [cart, setCart] = useState([])
   const [cartOpen, setCartOpen] = useState(false)
@@ -466,6 +468,174 @@ function App() {
     setCart([])
     setCartOpen(false)
   }
+  
+  if (activeView === 'admin') {
+  const totalStock = products.reduce(
+    (total, product) => total + product.quantity,
+    0,
+  )
+
+  const lowStockProducts = products.filter(
+    (product) => product.quantity < 5,
+  ).length
+
+  return (
+    <div className="admin-layout">
+      <aside className="admin-sidebar">
+        <div className="admin-brand">
+          <h2>Luna <span>Jewelry</span></h2>
+          <p>Management Panel</p>
+        </div>
+<nav className="admin-menu">
+  <button
+    className={adminSection === 'dashboard' ? 'admin-menu-active' : ''}
+    onClick={() => setAdminSection('dashboard')}
+  >
+    <span>⌂</span> Dashboard
+  </button>
+
+  <button
+    className={adminSection === 'products' ? 'admin-menu-active' : ''}
+    onClick={() => setAdminSection('products')}
+  >
+    <span>◇</span> Products
+  </button>
+
+  <button
+    className={adminSection === 'inventory' ? 'admin-menu-active' : ''}
+    onClick={() => setAdminSection('inventory')}
+  >
+    <span>▤</span> Inventory
+  </button>
+</nav>
+        <button
+          className="back-to-shop"
+          onClick={() => setActiveView('shop')}
+        >
+          ← Back to Shop
+        </button>
+      </aside>
+
+      <main className="admin-main">
+        <header className="admin-header">
+          <div>
+            <p className="admin-eyebrow">WELCOME TO LUNA JEWELRY</p>
+          
+            <p>Here's an overview of your jewelry shop.</p>
+          </div>
+
+          <span className="admin-avatar">L</span>
+        </header>
+
+    {adminSection === 'dashboard' && (
+  <>
+    <section className="admin-stats">
+      <article className="admin-stat-card">
+        <span>Total Products</span>
+        <h2>{products.length}</h2>
+        <p>Jewelry items listed</p>
+      </article>
+
+      <article className="admin-stat-card">
+        <span>Total Stock</span>
+        <h2>{totalStock}</h2>
+        <p>Available pieces</p>
+      </article>
+
+      <article className="admin-stat-card">
+        <span>Low Stock</span>
+        <h2>{lowStockProducts}</h2>
+        <p>Products with fewer than 5 pieces</p>
+      </article>
+
+      <article className="admin-stat-card">
+        <span>Categories</span>
+        <h2>{categories.length - 1}</h2>
+        <p>Jewelry categories</p>
+      </article>
+    </section>
+
+    <section className="admin-welcome">
+      <p className="admin-eyebrow">YOUR STORE AT A GLANCE</p>
+      <h2>Every little detail matters. ♡</h2>
+      <p>
+        Manage your jewelry collection, keep track of your inventory,
+        and make sure every piece is ready for your customers.
+      </p>
+    </section>
+  </>
+)}
+
+{adminSection === 'products' && (
+  <section className="admin-table-section">
+    <h2>All Products</h2>
+    <p>View the jewelry items available in your store.</p>
+
+    <div className="admin-table-wrapper">
+      <table className="admin-table">
+        <thead>
+          <tr>
+            <th>Product Name</th>
+            <th>Category</th>
+            <th>Price</th>
+            <th>Stock</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {products.map((product) => (
+            <tr key={product.id}>
+              <td>{product.name}</td>
+              <td>{product.category}</td>
+              <td>₱{product.price.toLocaleString()}</td>
+              <td>{product.quantity}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+)}
+
+{adminSection === 'inventory' && (
+  <section className="admin-table-section">
+
+
+    <h2>Inventory Overview</h2>
+    <p>Monitor available stock for every jewelry item.</p>
+
+    <div className="admin-table-wrapper">
+      <table className="admin-table">
+        <thead>
+          <tr>
+            <th>Product Name</th>
+            <th>Available Stock</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {products.map((product) => (
+            <tr key={product.id}>
+              <td>{product.name}</td>
+              <td>{product.quantity}</td>
+              <td>
+                {product.quantity < 5
+                  ? 'Low Stock'
+                  : 'In Stock'}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+)}
+
+      </main>
+    </div>
+  )
+}
 
   return (
 
@@ -481,11 +651,19 @@ function App() {
           <a href="#products">Collection</a>
           <a href="#about">About</a>
         </nav>
+<div className="nav-actions">
+  <button
+    className="admin-button"
+    onClick={() => setActiveView('admin')}
+  >
+    Admin Dashboard
+  </button>
 
-        <button className="cart-button" onClick={() => setCartOpen(true)}>
-          ♥ My Cart
-          {cartCount > 0 && <span className="cart-count">{cartCount}</span>}
-        </button>
+  <button className="cart-button" onClick={() => setCartOpen(true)}>
+    ♥ My Cart
+    {cartCount > 0 && <span className="cart-count">{cartCount}</span>}
+  </button>
+</div>
       </header>
 
       <main>
