@@ -1,5 +1,4 @@
-
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './App.css'
 
 
@@ -371,6 +370,21 @@ function App() {
   const [cart, setCart] = useState([])
   const [cartOpen, setCartOpen] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState(null)
+  const [showProductForm, setShowProductForm] = useState(false)
+  const [editingProductId, setEditingProductId] = useState(null)
+  const [productSearch, setProductSearch] = useState('')
+const [adminCategoryFilter, setAdminCategoryFilter] = useState('All Jewelry')
+
+
+const [newProduct, setNewProduct] = useState({
+  name: '',
+  category: 'Earrings',
+  price: '',
+  quantity: '',
+  specification: '',
+  description: '',
+  image: '',
+})
 
   const filteredProducts =
     selectedCategory === 'All Jewelry'
@@ -382,6 +396,17 @@ function App() {
     (total, item) => total + item.price * item.quantity,
     0,
   )
+  const adminFilteredProducts = products.filter((product) => {
+  const matchesSearch = product.name
+    .toLowerCase()
+    .includes(productSearch.toLowerCase())
+
+  const matchesCategory =
+    adminCategoryFilter === 'All Jewelry' ||
+    product.category === adminCategoryFilter
+
+  return matchesSearch && matchesCategory
+})
 
   function toggleFavorite(id) {
     setFavorites((current) =>
@@ -390,6 +415,77 @@ function App() {
         : [...current, id],
     )
   }
+  function handleAddProduct(event) {
+  event.preventDefault()
+
+  const product = {
+    id: editingProductId ?? Date.now(),
+    name: newProduct.name,
+    category: newProduct.category,
+    price: Number(newProduct.price),
+    quantity: Number(newProduct.quantity),
+    rating: 5.0,
+    description: newProduct.description,
+    specification: newProduct.specification,
+    image: newProduct.image,
+  }
+
+setProducts((current) =>
+  editingProductId !== null
+    ? current.map((item) =>
+        item.id === editingProductId ? product : item,
+      )
+    : [...current, product],
+)
+
+  setNewProduct({
+    name: '',
+    category: 'Earrings',
+    price: '',
+    quantity: '',
+    specification: '',
+    description: '',
+    image: '',
+  })
+
+setShowProductForm(false)
+setEditingProductId(null)
+
+alert(
+  editingProductId !== null
+    ? 'Product updated successfully!'
+    : 'Product added successfully!',
+)
+}
+
+function handleStartEdit(product) {
+  setEditingProductId(product.id)
+
+  setNewProduct({
+    name: product.name,
+    category: product.category,
+    price: product.price,
+    quantity: product.quantity,
+    specification: product.specification,
+    description: product.description,
+    image: product.image,
+  })
+
+  setShowProductForm(true)
+}
+function handleDeleteProduct(id) {
+  const confirmed = window.confirm(
+    'Are you sure you want to delete this product?',
+  )
+
+  if (!confirmed) return
+
+  setProducts((current) =>
+    current.filter((product) => product.id !== id),
+  )
+
+  alert('Product deleted successfully!')
+}
 
   function addToCart(product) {
     const alreadyInCart = cart.find((item) => item.id === product.id)
@@ -437,37 +533,38 @@ function App() {
     )
   }
 
-  function purchaseItems() {
-    if (cart.length === 0) return
+ function purchaseItems() {
+  if (cart.length === 0) return
 
-    const confirmed = window.confirm(
-      `Confirm your purchase of ${cartCount} item(s) for ₱${grandTotal.toFixed(2)}?`,
-    )
+  const confirmed = window.confirm(
+    `Confirm your purchase of ${cartCount} item(s) for ₱${grandTotal.toFixed(2)}?`,
+  )
 
-    if (!confirmed) return
+  if (!confirmed) return
 
-    setProducts((current) =>
-      current.map((product) => {
-        const purchasedItem = cart.find(
-          (item) => item.id === product.id,
-        )
+  setProducts((current) =>
+    current.map((product) => {
+      const purchasedItem = cart.find(
+        (item) => item.id === product.id,
+      )
 
-        return purchasedItem
-          ? {
-              ...product,
-              quantity: product.quantity - purchasedItem.quantity,
-            }
-          : product
-      }),
-    )
+      return purchasedItem
+        ? {
+            ...product,
+            quantity: product.quantity - purchasedItem.quantity,
+          }
+        : product
+    }),
+  )
 
-    alert(
-      `Purchase successful! Your total is ₱${grandTotal.toFixed(2)}. Thank you for shopping with Luna Jewelry!`,
-    )
+  alert(
+    `Purchase successful! Your total is ₱${grandTotal.toFixed(2)}. Thank you for shopping with Luna Jewelry!`,
+  )
 
-    setCart([])
-    setCartOpen(false)
-  }
+  setCart([])
+  setCartOpen(false)
+}
+
   
   if (activeView === 'admin') {
   const totalStock = products.reduce(
@@ -568,8 +665,212 @@ function App() {
 
 {adminSection === 'products' && (
   <section className="admin-table-section">
-    <h2>All Products</h2>
-    <p>View the jewelry items available in your store.</p>
+    <div className="admin-products-header">
+      <div className="admin-product-filters">
+  <input
+    type="text"
+    placeholder="Search product name..."
+    value={productSearch}
+    onChange={(event) => setProductSearch(event.target.value)}
+  />
+
+  <select
+    value={adminCategoryFilter}
+    onChange={(event) => setAdminCategoryFilter(event.target.value)}
+  >
+    {categories.map((category) => (
+      <option key={category} value={category}>
+        {category}
+      </option>
+    ))}
+  </select>
+</div>
+      <div>
+        <h2>All Products</h2>
+        <p>View and manage the jewelry items available in your store.</p>
+      </div>
+
+     <button
+  className="add-product-button"
+  onClick={() => {
+    setEditingProductId(null)
+    setNewProduct({
+      name: '',
+      category: 'Earrings',
+      price: '',
+      quantity: '',
+      specification: '',
+      description: '',
+      image: '',
+    })
+    setShowProductForm(true)
+  }}
+>
+  + Add Product
+</button>
+    </div>
+
+    {showProductForm && (
+      <div className="product-form-overlay">
+        <div className="product-form-modal">
+        <h2>
+  {editingProductId !== null ? 'Edit Product' : 'Add New Product'}
+</h2>
+
+<p>
+  {editingProductId !== null
+    ? 'Update the details of this jewelry piece.'
+    : 'Enter the details of your new jewelry piece.'}
+</p>
+
+         <form onSubmit={handleAddProduct} className="product-form">
+
+  <label>Product Name</label>
+  <input
+    type="text"
+    value={newProduct.name}
+    onChange={(event) =>
+      setNewProduct({ ...newProduct, name: event.target.value })
+    }
+    placeholder="Enter product name"
+    required
+  />
+
+  <label>Category</label>
+  <select
+    value={newProduct.category}
+    onChange={(event) =>
+      setNewProduct({ ...newProduct, category: event.target.value })
+    }
+  >
+    {categories.slice(1).map((category) => (
+      <option key={category} value={category}>
+        {category}
+      </option>
+    ))}
+  </select>
+
+  <label>Price (₱)</label>
+  <input
+    type="number"
+    min="0.01"
+    step="0.01"
+    value={newProduct.price}
+    onChange={(event) =>
+      setNewProduct({ ...newProduct, price: event.target.value })
+    }
+    placeholder="Enter price"
+    required
+  />
+
+  <label>Stock Quantity</label>
+  <input
+    type="number"
+    min="0"
+    step="1"
+    value={newProduct.quantity}
+    onChange={(event) =>
+      setNewProduct({ ...newProduct, quantity: event.target.value })
+    }
+    placeholder="Enter stock quantity"
+    required
+  />
+
+  <label>Specification</label>
+  <input
+    type="text"
+    value={newProduct.specification}
+    onChange={(event) =>
+      setNewProduct({ ...newProduct, specification: event.target.value })
+    }
+    placeholder="e.g. Gold-tone finish"
+    required
+  />
+
+  <label>Short Description</label>
+  <textarea
+    value={newProduct.description}
+    onChange={(event) =>
+      setNewProduct({ ...newProduct, description: event.target.value })
+    }
+    placeholder="Describe your jewelry piece"
+    required
+  />
+<label>Upload Product Image from PC</label>
+<input
+  type="file"
+  accept="image/png,image/jpeg,image/webp"
+  onChange={(event) => {
+    const file = event.target.files[0]
+
+    if (!file) return
+
+    const reader = new FileReader()
+
+    reader.onloadend = () => {
+      setNewProduct((current) => ({
+        ...current,
+        image: reader.result,
+      }))
+    }
+
+    reader.readAsDataURL(file)
+  }}
+/>
+
+<label>Or use an Image URL</label>
+<input
+  type="url"
+  value={newProduct.image.startsWith('data:') ? '' : newProduct.image}
+  onChange={(event) =>
+    setNewProduct((current) => ({
+      ...current,
+      image: event.target.value,
+    }))
+  }
+  placeholder="Paste image URL"
+  required={!newProduct.image}
+/>
+
+{newProduct.image && (
+  <div className="product-image-preview">
+    <p>Image Preview</p>
+    <img src={newProduct.image} alt="Product preview" />
+  </div>
+)}
+  
+  <div className="product-form-actions">
+   <button
+  type="button"
+  onClick={() => {
+    setShowProductForm(false)
+    setEditingProductId(null)
+    setNewProduct({
+      name: '',
+      category: 'Earrings',
+      price: '',
+      quantity: '',
+      specification: '',
+      description: '',
+      image: '',
+    })
+  }}
+>
+  Cancel
+</button>
+
+   <button type="submit">
+  {editingProductId !== null ? 'Save Changes' : 'Save Product'}
+</button>
+  </div>
+
+</form>
+        </div>
+      </div>
+    )}
+
+
+    
 
     <div className="admin-table-wrapper">
       <table className="admin-table">
@@ -579,19 +880,71 @@ function App() {
             <th>Category</th>
             <th>Price</th>
             <th>Stock</th>
+            <th>Actions</th>
           </tr>
         </thead>
+<tbody>
+  {adminFilteredProducts.length === 0 ? (
+    <tr>
+      <td colSpan="5" className="no-products-found">
+        No products found. Try a different search or category.
+      </td>
+    </tr>
+  ) : (
+    adminFilteredProducts.map((product) => (
+      <tr key={product.id}>
+        <td>{product.name}</td>
+        <td>{product.category}</td>
+        <td>₱{product.price.toLocaleString()}</td>
 
-        <tbody>
-          {products.map((product) => (
-            <tr key={product.id}>
-              <td>{product.name}</td>
-              <td>{product.category}</td>
-              <td>₱{product.price.toLocaleString()}</td>
-              <td>{product.quantity}</td>
-            </tr>
-          ))}
-        </tbody>
+        <td>
+          <div className="stock-controls">
+            <button
+              onClick={() => {
+                setProducts((current) =>
+                  current.map((item) =>
+                    item.id === product.id
+                      ? { ...item, quantity: Math.max(0, item.quantity - 1) }
+                      : item,
+                  ),
+                )
+              }}
+            >
+              −
+            </button>
+
+            <span>{product.quantity}</span>
+
+            <button
+              onClick={() => {
+                setProducts((current) =>
+                  current.map((item) =>
+                    item.id === product.id
+                      ? { ...item, quantity: item.quantity + 1 }
+                      : item,
+                  ),
+                )
+              }}
+            >
+              +
+            </button>
+          </div>
+        </td>
+
+        <td>
+          
+
+          <button
+            className="delete-product-button"
+            onClick={() => handleDeleteProduct(product.id)}
+          >
+            Delete
+          </button>
+        </td>
+      </tr> 
+    ))
+    )}
+</tbody>
       </table>
     </div>
   </section>
@@ -599,8 +952,6 @@ function App() {
 
 {adminSection === 'inventory' && (
   <section className="admin-table-section">
-
-
     <h2>Inventory Overview</h2>
     <p>Monitor available stock for every jewelry item.</p>
 
@@ -620,9 +971,7 @@ function App() {
               <td>{product.name}</td>
               <td>{product.quantity}</td>
               <td>
-                {product.quantity < 5
-                  ? 'Low Stock'
-                  : 'In Stock'}
+                {product.quantity < 5 ? 'Low Stock' : 'In Stock'}
               </td>
             </tr>
           ))}
@@ -637,8 +986,7 @@ function App() {
   )
 }
 
-  return (
-
+return (
 
     <div className="shop">
       <header className="navbar">
